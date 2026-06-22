@@ -1,6 +1,25 @@
 # my_os
 
-A bare-metal Rust kernel for `x86_64` — no standard library, no operating system underneath. Built from scratch using Rust nightly with a custom target and hand-wired drivers.
+A bare-metal Rust kernel for `x86_64` - no standard library, no operating system underneath. Built from scratch using Rust nightly with a custom target and hand-wired drivers.
+
+This project is currently a kernel, not a full desktop/server operating system. It boots, initializes core hardware and memory services, and runs a small cooperative task scheduler inside the kernel itself.
+
+## What it does today
+
+- Boots into a `#![no_std]`, `#![no_main]` kernel
+- Sets up the GDT, TSS, IDT, and PIC
+- Initializes paging and a kernel heap
+- Uses a cooperative round-robin scheduler for kernel tasks
+- Handles timer and keyboard interrupts
+- Prints to both VGA text mode and the serial port
+
+What that means in practice:
+
+- Tasks are Rust functions that the kernel runs directly
+- Tasks share the same kernel address space
+- Tasks must yield cooperatively
+- There are no separate user programs yet
+- There is no privilege separation between apps and the kernel yet
 
 ---
 
@@ -150,6 +169,35 @@ kernel_main()
   │
   └─ scheduler::run()      cooperative loop forever
 ```
+
+---
+
+## Wishlist
+
+This is the roadmap of things that would turn this kernel into a more complete operating system:
+
+- Preemptive multitasking
+- Real context switching with per-task CPU state
+- Separate stacks for each task
+- User mode support and privilege switching
+- System calls so user programs can request kernel services
+- Process creation, termination, and waiting
+- Per-process virtual memory spaces
+- Memory isolation between processes
+- ELF loading for executable binaries
+- A file system layer
+- A simple shell or terminal UI
+- Better keyboard input handling, including modifiers and special keys
+- A basic driver model for storage and graphics
+- Smarter panic/recovery tooling and more kernel diagnostics
+
+Longer-term ideas:
+
+- Paging-based copy-on-write process spawning
+- Signal/interrupt delivery to user processes
+- Network stack support
+- Multicore bring-up and scheduler scaling
+- A package format for user-space programs
 
 ---
 
