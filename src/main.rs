@@ -62,7 +62,7 @@ pub(crate) fn hlt_loop() -> ! {
 }
 
 fn kernel_main(boot_info: &'static bootloader::BootInfo) -> ! {
-    serial_println!("my_os booting...");
+    serial_println!("open_kernel booting...");
 
     // ── CPU / interrupt setup ─────────────────────────────────────────────
     gdt::init();

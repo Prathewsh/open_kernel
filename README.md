@@ -1,4 +1,4 @@
-# my_os
+# open_kernel
 
 A bare-metal Rust kernel for `x86_64` - no standard library, no operating system underneath. Built from scratch using Rust nightly with a custom target and hand-wired drivers.
 
@@ -236,14 +236,14 @@ QEMU must be installed and `qemu-system-x86_64` on your `PATH`.
 cargo build
 ```
 
-The `.cargo/config.toml` sets the default target to `x86_64-my_os.json` and uses `-Z build-std` to compile `core`, `alloc`, and `compiler_builtins` from source, so no extra `--target` flag is needed.
+The `.cargo/config.toml` sets the default target to `x86_64-open_kernel.json` and uses `-Z build-std` to compile `core`, `alloc`, and `compiler_builtins` from source, so no extra `--target` flag is needed.
 
 ### Run in QEMU
 
 ```bash
 cargo bootimage
 qemu-system-x86_64 \
-  -drive format=raw,file=target/x86_64-my_os/debug/bootimage-my_os.bin \
+  -drive format=raw,file=target/x86_64-open_kernel/debug/bootimage-open_kernel.bin \
   -serial file:serial.log \
   -machine pc \
   -k en-us

@@ -5,7 +5,7 @@ use crate::{
 
 pub fn init() {
     serial_println!("[OK] shell ready");
-    println!("my_os shell ready");
+    println!("open_kernel shell ready");
     print_prompt();
 }
 
@@ -90,7 +90,7 @@ fn handle_command(cmd: &str) {
             println!("commands: help, uname, uptime, ps, tasks, clear, reboot");
         }
         "uname" => {
-            println!("my_os 0.1.0 x86_64 bare-metal");
+            println!("open_kernel 0.1.0 x86_64 bare-metal");
         }
         "uptime" => {
             println!("uptime: {} ticks", scheduler::uptime_ticks());
