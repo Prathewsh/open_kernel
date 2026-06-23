@@ -6,11 +6,13 @@
 extern crate alloc;
 
 pub mod allocator;
+pub mod input;
 pub mod gdt;
 pub mod interrupts;
 pub mod memory;
 pub mod scheduler;
 pub mod pic;
+pub mod shell;
 pub mod vga_buffer;
 
 use alloc::{boxed::Box, string::String, vec::Vec};
@@ -27,6 +29,10 @@ lazy_static! {
     static ref SERIAL1: Mutex<SerialPort> = {
         let mut p = unsafe { SerialPort::new(0x3F8) };
         p.init();
+        unsafe {
+            x86_64::instructions::port::Port::<u8>::new(0x3F9).write(0x01);
+            x86_64::instructions::port::Port::<u8>::new(0x3FC).write(0x0B);
+        }
         Mutex::new(p)
     };
 }
@@ -105,10 +111,12 @@ fn kernel_main(boot_info: &'static bootloader::BootInfo) -> ! {
     scheduler::init();
     serial_println!("[OK] scheduler initialized");
 
+    shell::init();
+
     cpu_irq::enable();
     serial_println!("[OK] interrupts enabled — scheduler running");
 
-    println!("my_os ready — type something!");
+    println!("focus this window and type: help");
 
     scheduler::run()
 }

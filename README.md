@@ -35,6 +35,7 @@ What that means in practice:
 - **Kernel heap** — 256 KiB mapped at `0x4444_4444_0000`, backed by a linked-list allocator; enables `Box`, `Vec`, `String` etc.
 - **Cooperative round-robin scheduler** with up to 8 task slots, driven by the PIT timer IRQ
 - Keyboard input decoded from PS/2 scancode set 1
+- Tiny interactive shell with `help`, `uname`, `uptime`, `ps`, `tasks`, `clear`, and `reboot`
 - Clean panic handler that prints to both outputs then halts
 
 ---
@@ -139,6 +140,7 @@ When no task is runnable the scheduler uses `enable_and_hlt()`, which enables in
 | `idle` | Logs to serial every 32 ticks; always yields |
 | `worker-a` | Logs to VGA + serial every 16 ticks; always yields |
 | `worker-b` (logger) | Logs timer-tick events from the ISR flag; finishes after tick 128 |
+| `shell` | Polls the keyboard input queue and runs built-in commands |
 
 **Timer integration**
 
@@ -164,7 +166,7 @@ kernel_main()
   ├─ memory::init()        build OffsetPageTable from bootloader physical-memory offset
   ├─ allocator::init_heap  map 256 KiB heap, install global allocator
   │
-  ├─ scheduler::init()     register idle / worker-a / worker-b tasks
+  ├─ scheduler::init()     register idle / worker-a / worker-b / shell tasks
   ├─ sti                   enable hardware interrupts
   │
   └─ scheduler::run()      cooperative loop forever
@@ -234,19 +236,28 @@ QEMU must be installed and `qemu-system-x86_64` on your `PATH`.
 cargo build
 ```
 
-The `.cargo/config.toml` sets the default target to `x86_64-unknown-none` and uses `-Z build-std` to compile `core`, `alloc`, and `compiler_builtins` from source, so no extra `--target` flag is needed.
+The `.cargo/config.toml` sets the default target to `x86_64-my_os.json` and uses `-Z build-std` to compile `core`, `alloc`, and `compiler_builtins` from source, so no extra `--target` flag is needed.
 
 ### Run in QEMU
 
 ```bash
 cargo bootimage
 qemu-system-x86_64 \
-  -drive format=raw,file=target/x86_64-unknown-none/debug/bootimage-my_os.bin \
-  -serial stdio
+  -drive format=raw,file=target/x86_64-my_os/debug/bootimage-my_os.bin \
+  -serial file:serial.log \
+  -machine pc \
+  -k en-us
 ```
 
-`-serial stdio` pipes COM1 to your terminal. You will see structured `[OK]` boot logs in the terminal and the VGA output in the QEMU window.
+`-serial file:serial.log` writes COM1 logs to `serial.log` without stealing keyboard input from your terminal. Use the QEMU window for typing.
 
 ### Keyboard input
 
-With QEMU focused, type any alphanumeric key — the scancode is translated and echoed to both outputs. Unsupported scancodes are silently ignored.
+The PS/2 keyboard and COM1 serial interrupt handlers both feed a small line buffer. Press `Enter` to submit the current line; the shell task will pick it up on the next scheduler cycle.
+
+You can type commands in either place:
+
+- QEMU window: click/focus the window first, then type
+- Terminal running QEMU: use `-serial stdio` instead of `-serial file:serial.log`
+
+The PS/2 keyboard path currently supports lowercase letters, digits, space, Enter, and Backspace; unsupported scancodes are silently ignored. The serial path supports printable ASCII.

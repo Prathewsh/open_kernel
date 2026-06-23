@@ -4,7 +4,7 @@ use lazy_static::lazy_static;
 use spin::Mutex;
 use x86_64::instructions::interrupts as cpu_irq;
 
-use crate::{println, serial_println};
+use crate::{println, serial_println, shell};
 
 const MAX_TASKS: usize = 8;
 
@@ -109,14 +109,44 @@ lazy_static! {
 static SCHEDULER_TICKED: AtomicBool = AtomicBool::new(false);
 static BOOT_TICK_COUNT: AtomicU64 = AtomicU64::new(0);
 
+pub struct TaskInfo {
+    pub id: usize,
+    pub name: &'static str,
+    pub state: TaskState,
+    pub runs: u64,
+}
+
 pub fn init() {
     let mut sched = SCHEDULER.lock();
     sched.add_task("idle", idle_task);
     sched.add_task("worker-a", worker_task);
     sched.add_task("worker-b", logger_task);
+    sched.add_task("shell", shell::task);
 
-    serial_println!("[OK] scheduler: {} task slots populated", 3);
+    serial_println!("[OK] scheduler: {} task slots populated", task_count_locked(&sched));
     println!("[OK] scheduler ready");
+}
+
+pub fn uptime_ticks() -> u64 {
+    BOOT_TICK_COUNT.load(Ordering::Relaxed)
+}
+
+pub fn snapshot_tasks(mut visit: impl FnMut(TaskInfo)) {
+    let sched = SCHEDULER.lock();
+    for (id, task) in sched.tasks.iter().enumerate() {
+        if let Some(task) = task {
+            visit(TaskInfo {
+                id,
+                name: task.name,
+                state: task.state,
+                runs: task.runs,
+            });
+        }
+    }
+}
+
+fn task_count_locked(sched: &Scheduler) -> usize {
+    sched.tasks.iter().filter(|task| task.is_some()).count()
 }
 
 pub fn on_timer_tick() {

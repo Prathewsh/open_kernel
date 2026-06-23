@@ -60,6 +60,7 @@ impl Writer {
     pub fn write_byte(&mut self, byte: u8) {
         match byte {
             b'\n' => self.new_line(),
+            0x08 => self.backspace(),
             byte => {
                 if self.column_position >= BUFFER_WIDTH {
                     self.new_line();
@@ -76,6 +77,27 @@ impl Writer {
                 self.column_position += 1;
             }
         }
+    }
+
+    pub fn clear_screen(&mut self) {
+        for row in 0..BUFFER_HEIGHT {
+            self.clear_row(row);
+        }
+        self.column_position = 0;
+    }
+
+    fn backspace(&mut self) {
+        if self.column_position == 0 {
+            return;
+        }
+
+        self.column_position -= 1;
+        let row = BUFFER_HEIGHT - 1;
+        let col = self.column_position;
+        self.buffer.chars[row][col].write(ScreenChar {
+            ascii_character: b' ',
+            color_code: self.color_code,
+        });
     }
 
     fn new_line(&mut self) {
@@ -107,6 +129,13 @@ impl Writer {
             }
         }
     }
+}
+
+pub fn clear_screen() {
+    use x86_64::instructions::interrupts;
+    interrupts::without_interrupts(|| {
+        WRITER.lock().clear_screen();
+    });
 }
 
 impl fmt::Write for Writer {

@@ -15,6 +15,7 @@ pub static PICS: Mutex<ChainedPics> =
 pub enum InterruptIndex {
     Timer    = PIC_1_OFFSET,     // IRQ0
     Keyboard = PIC_1_OFFSET + 1, // IRQ1
+    Serial1  = PIC_1_OFFSET + 4, // IRQ4
 }
 
 impl InterruptIndex {
@@ -26,5 +27,10 @@ impl InterruptIndex {
 }
 
 pub fn init() {
-    unsafe { PICS.lock().initialize() }
+    unsafe {
+        let mut pics = PICS.lock();
+        pics.initialize();
+        // Unmask IRQ0 timer, IRQ1 keyboard, and IRQ4 COM1 serial.
+        pics.write_masks(!(0b0001_0011), u8::MAX);
+    }
 }

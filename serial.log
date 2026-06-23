@@ -1,0 +1,35 @@
+my_os booting...
+[OK] GDT + TSS
+[OK] IDT
+[OK] PIC  (IRQs → IDT[32..47])
+EXCEPTION: BREAKPOINT
+InterruptStackFrame {
+    instruction_pointer: VirtAddr(
+        0x21a2c1,
+    ),
+    code_segment: SegmentSelector {
+        index: 1,
+        rpl: Ring0,
+    },
+    cpu_flags: RFlags(
+        PARITY_FLAG | 0x2,
+    ),
+    stack_pointer: VirtAddr(
+        0x10000201de8,
+    ),
+    stack_segment: SegmentSelector {
+        index: 0,
+        rpl: Ring0,
+    },
+}
+[OK] exception handling
+[OK] heap   (256 KiB at 0x444444440000)
+[OK] Box<u64>  = 0xdeadbeef  (@ 0x444444440000)
+[OK] Vec<u32>  = [0, 1, 4, 9, 16, 25, 36, 49]
+[OK] String    = "hello from the kernel heap"
+[  ] memory map: 16 regions
+[OK] scheduler: 4 task slots populated
+[OK] scheduler initialized
+[OK] shell ready
+myos> [OK] interrupts enabled — scheduler running
+[sched] timer tick 1
