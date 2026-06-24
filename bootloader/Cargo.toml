@@ -1,0 +1,11 @@
+[package]
+name = "my_bootloader"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+uefi = "0.24.0"
+uefi-services = "0.21.0"
+xmas-elf = "0.9"
+bootloader_api = { path = "../bootloader_api" }
+x86_64 = "0.15"

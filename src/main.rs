@@ -23,7 +23,10 @@ use spin::Mutex;
 use uart_16550::SerialPort;
 use x86_64::{instructions::interrupts as cpu_irq, VirtAddr};
 
-bootloader::entry_point!(kernel_main);
+#[no_mangle]
+pub extern "sysv64" fn _start(boot_info: &'static mut bootloader_api::BootInfo) -> ! {
+    kernel_main(boot_info)
+}
 
 lazy_static! {
     static ref SERIAL1: Mutex<SerialPort> = {
@@ -61,7 +64,7 @@ pub(crate) fn hlt_loop() -> ! {
     }
 }
 
-fn kernel_main(boot_info: &'static bootloader::BootInfo) -> ! {
+fn kernel_main(boot_info: &'static mut bootloader_api::BootInfo) -> ! {
     serial_println!("open_kernel booting...");
 
     // ── CPU / interrupt setup ─────────────────────────────────────────────
