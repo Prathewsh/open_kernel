@@ -4,6 +4,8 @@ A bare-metal Rust kernel for `x86_64` - no standard library, no operating system
 
 This project is currently a kernel, not a full desktop/server operating system. It boots, initializes core hardware and memory services, and runs a small cooperative task scheduler inside the kernel itself.
 
+![QEMU Window](qemu_window.png)
+
 ## What it does today
 
 - Boots into a `#![no_std]`, `#![no_main]` kernel via a custom UEFI bootloader.
