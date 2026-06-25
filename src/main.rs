@@ -6,14 +6,15 @@
 extern crate alloc;
 
 pub mod allocator;
-pub mod input;
 pub mod gdt;
+pub mod input;
 pub mod interrupts;
 pub mod memory;
-pub mod scheduler;
 pub mod pic;
+pub mod scheduler;
 pub mod shell;
 pub mod vga_buffer;
+pub mod vga_font;
 
 use alloc::{boxed::Box, string::String, vec::Vec};
 use core::fmt::Write;
@@ -65,6 +66,18 @@ pub(crate) fn hlt_loop() -> ! {
 }
 
 fn kernel_main(boot_info: &'static mut bootloader_api::BootInfo) -> ! {
+    // UEFI page tables mark various pages read-only. Clear CR0.WP early so
+    // we can write to the GOP framebuffer and page table entries.
+    unsafe {
+        let cr0 = x86_64::registers::control::Cr0::read_raw();
+        x86_64::registers::control::Cr0::write_raw(
+            cr0 & !x86_64::registers::control::Cr0Flags::WRITE_PROTECT.bits(),
+        );
+    }
+
+    // Continue using the GOP framebuffer that OVMF configured and displayed.
+    vga_buffer::init(boot_info.framebuffer);
+
     serial_println!("open_kernel booting...");
 
     // ── CPU / interrupt setup ─────────────────────────────────────────────
@@ -81,13 +94,21 @@ fn kernel_main(boot_info: &'static mut bootloader_api::BootInfo) -> ! {
     serial_println!("[OK] exception handling");
 
     // ── Memory setup ──────────────────────────────────────────────────────
+
     let phys_offset = VirtAddr::new(boot_info.physical_memory_offset);
     let mut mapper = unsafe { memory::init(phys_offset) };
     let mut frame_allocator =
         unsafe { memory::BootInfoFrameAllocator::init(&boot_info.memory_map) };
 
-    allocator::init_heap(&mut mapper, &mut frame_allocator)
-        .expect("heap initialization failed");
+    allocator::init_heap(&mut mapper, &mut frame_allocator).expect("heap initialization failed");
+
+    // Re-enable write protection now that page tables are set up
+    unsafe {
+        let cr0 = x86_64::registers::control::Cr0::read_raw();
+        x86_64::registers::control::Cr0::write_raw(
+            cr0 | x86_64::registers::control::Cr0Flags::WRITE_PROTECT.bits(),
+        );
+    }
     serial_println!(
         "[OK] heap   ({} KiB at {:#x})",
         allocator::HEAP_SIZE / 1024,

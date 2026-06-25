@@ -6,6 +6,38 @@
 pub struct BootInfo {
     pub memory_map: MemoryMap,
     pub physical_memory_offset: u64,
+    pub framebuffer: FrameBufferInfo,
+}
+
+#[derive(Debug, Clone, Copy)]
+#[repr(C)]
+pub struct FrameBufferInfo {
+    pub address: u64,
+    pub byte_len: usize,
+    pub width: usize,
+    pub height: usize,
+    pub stride: usize,
+    pub pixel_format: PixelFormat,
+}
+
+impl FrameBufferInfo {
+    pub const fn empty() -> Self {
+        Self {
+            address: 0,
+            byte_len: 0,
+            width: 0,
+            height: 0,
+            stride: 0,
+            pixel_format: PixelFormat::Bgr,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(C)]
+pub enum PixelFormat {
+    Rgb,
+    Bgr,
 }
 
 /// A simple memory map representing usable memory regions.
@@ -65,8 +97,12 @@ pub struct MemoryRegionRange {
 }
 
 impl MemoryRegionRange {
-    pub fn start_addr(&self) -> u64 { self.start_addr }
-    pub fn end_addr(&self) -> u64 { self.end_addr }
+    pub fn start_addr(&self) -> u64 {
+        self.start_addr
+    }
+    pub fn end_addr(&self) -> u64 {
+        self.end_addr
+    }
 }
 
 /// The type of a memory region.

@@ -51,5 +51,21 @@ impl InputBuffer {
 }
 
 lazy_static! {
-    pub static ref INPUT: Mutex<InputBuffer> = Mutex::new(InputBuffer::new());
+    static ref INPUT: Mutex<InputBuffer> = Mutex::new(InputBuffer::new());
+}
+
+pub fn push_char(ch: char) {
+    x86_64::instructions::interrupts::without_interrupts(|| INPUT.lock().push_char(ch));
+}
+
+pub fn backspace() -> bool {
+    x86_64::instructions::interrupts::without_interrupts(|| INPUT.lock().backspace())
+}
+
+pub fn commit_line() {
+    x86_64::instructions::interrupts::without_interrupts(|| INPUT.lock().commit_line());
+}
+
+pub fn pop_line() -> Option<alloc::string::String> {
+    x86_64::instructions::interrupts::without_interrupts(|| INPUT.lock().pop_line())
 }

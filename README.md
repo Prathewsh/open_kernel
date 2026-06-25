@@ -14,7 +14,7 @@ This project is currently a kernel, not a full desktop/server operating system. 
 - Uses a cooperative round-robin scheduler for kernel tasks.
 - Handles hardware interrupts for timer and keyboard (PS/2 scancode set 1).
 - Provides a tiny interactive shell with basic commands (`help`, `uname`, `uptime`, `ps`, etc.).
-- Outputs to both a VGA text buffer and a UART serial port simultaneously.
+- Outputs to both the UEFI GOP framebuffer and a UART serial port simultaneously.
 
 ## Building and running
 
@@ -26,9 +26,10 @@ rustup component add rust-src --toolchain nightly
 rustup target add x86_64-unknown-uefi
 ```
 
-You also need `mtools` and QEMU (with OVMF firmware) installed:
-- **macOS:** `brew install mtools qemu`
-- **Linux:** `sudo apt install mtools qemu-system-x86 ovmf`
+You also need QEMU with OVMF firmware installed:
+
+- **macOS:** `brew install qemu`
+- **Linux:** `sudo apt install qemu-system-x86 ovmf`
 
 ### Build and Run
 
@@ -40,9 +41,13 @@ The simplest way to build the kernel, bootloader, and run the OS in QEMU is to u
 
 This script will automatically:
 - Build the kernel and custom UEFI bootloader
-- Create a FAT32 disk image (`build/uefi_disk.img`)
-- Copy the compiled files into the disk image
-- Start the OS in QEMU with COM1 logs written to `serial.log`
+- Create a virtual FAT directory under `build/mnt`
+- Copy the compiled files into the virtual EFI system partition
+- Start the OS in QEMU with an interactive COM1 terminal
+- Mirror COM1 output into `serial.log`
+
+After the `open_kernel>` prompt appears, type commands either in the terminal that
+launched `run.sh` or by clicking the QEMU window and using its PS/2 keyboard.
 
 ## Wishlist
 

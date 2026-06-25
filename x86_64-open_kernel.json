@@ -13,7 +13,10 @@
   "panic-strategy": "abort",
   "disable-redzone": true,
   "max-atomic-width": 64,
-  "code-model": "kernel",
+  "code-model": "small",
   "features": "-mmx,-sse,-sse2,-sse3,-ssse3,-sse4.1,-sse4.2,-avx,-avx2,+soft-float",
-  "rustc-abi": "softfloat"
+  "rustc-abi": "softfloat",
+  "pre-link-args": {
+    "gnu-lld": ["-Tsrc/linker.ld"]
+  }
 }

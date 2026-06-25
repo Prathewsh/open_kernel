@@ -1,12 +1,14 @@
 use linked_list_allocator::LockedHeap;
 use x86_64::{
+    structures::paging::{
+        mapper::MapToError, FrameAllocator, Mapper, Page, PageTableFlags, Size4KiB,
+    },
     VirtAddr,
-    structures::paging::{mapper::MapToError, FrameAllocator, Mapper, Page, PageTableFlags, Size4KiB},
 };
 
 // Place the kernel heap well above any bootloader / kernel image addresses.
 pub const HEAP_START: usize = 0x_4444_4444_0000;
-pub const HEAP_SIZE:  usize = 256 * 1024; // 256 KiB — plenty to start
+pub const HEAP_SIZE: usize = 256 * 1024; // 256 KiB — plenty to start
 
 #[global_allocator]
 static ALLOCATOR: LockedHeap = LockedHeap::empty();
@@ -19,9 +21,9 @@ pub fn init_heap(
     frame_allocator: &mut impl FrameAllocator<Size4KiB>,
 ) -> Result<(), MapToError<Size4KiB>> {
     let heap_start = VirtAddr::new(HEAP_START as u64);
-    let heap_end   = heap_start + HEAP_SIZE as u64 - 1u64;
+    let heap_end = heap_start + HEAP_SIZE as u64 - 1u64;
     let start_page = Page::containing_address(heap_start);
-    let end_page   = Page::containing_address(heap_end);
+    let end_page = Page::containing_address(heap_end);
 
     for page in Page::range_inclusive(start_page, end_page) {
         let frame = frame_allocator

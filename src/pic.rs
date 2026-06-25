@@ -13,17 +13,21 @@ pub static PICS: Mutex<ChainedPics> =
 #[derive(Debug, Clone, Copy)]
 #[repr(u8)]
 pub enum InterruptIndex {
-    Timer    = PIC_1_OFFSET,     // IRQ0
+    Timer = PIC_1_OFFSET,        // IRQ0
     Keyboard = PIC_1_OFFSET + 1, // IRQ1
-    Serial1  = PIC_1_OFFSET + 4, // IRQ4
+    Serial1 = PIC_1_OFFSET + 4,  // IRQ4
 }
 
 impl InterruptIndex {
     #[inline]
-    pub fn as_u8(self) -> u8 { self as u8 }
+    pub fn as_u8(self) -> u8 {
+        self as u8
+    }
 
     #[inline]
-    pub fn as_usize(self) -> usize { usize::from(self as u8) }
+    pub fn as_usize(self) -> usize {
+        usize::from(self as u8)
+    }
 }
 
 pub fn init() {

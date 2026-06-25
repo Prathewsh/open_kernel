@@ -1,4 +1,4 @@
-use core::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use core::sync::atomic::{AtomicU64, Ordering};
 
 use lazy_static::lazy_static;
 use spin::Mutex;
@@ -44,19 +44,26 @@ struct Task {
 
 impl Task {
     const fn new(name: &'static str, func: TaskFn) -> Self {
-        Self { name, func, state: TaskState::Ready, runs: 0 }
+        Self {
+            name,
+            func,
+            state: TaskState::Ready,
+            runs: 0,
+        }
     }
 }
 
 pub struct Scheduler {
     tasks: [Option<Task>; MAX_TASKS],
     current: usize,
-    tick: u64,
 }
 
 impl Scheduler {
     const fn new() -> Self {
-        Self { tasks: [None, None, None, None, None, None, None, None], current: 0, tick: 0 }
+        Self {
+            tasks: [None, None, None, None, None, None, None, None],
+            current: 0,
+        }
     }
 
     pub fn add_task(&mut self, name: &'static str, func: TaskFn) -> usize {
@@ -72,7 +79,10 @@ impl Scheduler {
     fn next_runnable_from(&self, start: usize) -> Option<usize> {
         for offset in 0..MAX_TASKS {
             let idx = (start + offset) % MAX_TASKS;
-            if matches!(self.tasks[idx].as_ref().map(|t| t.state), Some(TaskState::Ready)) {
+            if matches!(
+                self.tasks[idx].as_ref().map(|t| t.state),
+                Some(TaskState::Ready)
+            ) {
                 return Some(idx);
             }
         }
@@ -86,19 +96,28 @@ impl Scheduler {
         let task = self.tasks[idx].as_mut().expect("task missing");
         task.state = TaskState::Running;
         task.runs += 1;
-        let ctx = TaskContext { task_id: idx, tick: self.tick, yielded: false, finished: false };
+        let ctx = TaskContext {
+            task_id: idx,
+            tick: BOOT_TICK_COUNT.load(Ordering::Relaxed),
+            yielded: false,
+            finished: false,
+        };
         Some((idx, task.func, ctx))
     }
 
     /// Update task state after its function has returned.
     fn finish_task(&mut self, idx: usize, ctx: &TaskContext) {
         let task = self.tasks[idx].as_mut().expect("task missing");
-        task.state = if ctx.finished { TaskState::Finished } else { TaskState::Ready };
-        self.current = if ctx.yielded { (idx + 1) % MAX_TASKS } else { idx };
-    }
-
-    pub fn tick(&mut self) {
-        self.tick = self.tick.wrapping_add(1);
+        task.state = if ctx.finished {
+            TaskState::Finished
+        } else {
+            TaskState::Ready
+        };
+        self.current = if ctx.yielded {
+            (idx + 1) % MAX_TASKS
+        } else {
+            idx
+        };
     }
 }
 
@@ -106,7 +125,6 @@ lazy_static! {
     static ref SCHEDULER: Mutex<Scheduler> = Mutex::new(Scheduler::new());
 }
 
-static SCHEDULER_TICKED: AtomicBool = AtomicBool::new(false);
 static BOOT_TICK_COUNT: AtomicU64 = AtomicU64::new(0);
 
 pub struct TaskInfo {
@@ -123,7 +141,10 @@ pub fn init() {
     sched.add_task("worker-b", logger_task);
     sched.add_task("shell", shell::task);
 
-    serial_println!("[OK] scheduler: {} task slots populated", task_count_locked(&sched));
+    serial_println!(
+        "[OK] scheduler: {} task slots populated",
+        task_count_locked(&sched)
+    );
     println!("[OK] scheduler ready");
 }
 
@@ -151,9 +172,6 @@ fn task_count_locked(sched: &Scheduler) -> usize {
 
 pub fn on_timer_tick() {
     BOOT_TICK_COUNT.fetch_add(1, Ordering::Relaxed);
-    // Release so the updated count is visible when logger_task reads it.
-    SCHEDULER_TICKED.store(true, Ordering::Release);
-    SCHEDULER.lock().tick();
 }
 
 pub fn run() -> ! {
@@ -174,33 +192,26 @@ pub fn run() -> ! {
 
                 // Phase 3: re-acquire lock to commit the result.
                 SCHEDULER.lock().finish_task(idx, &ctx);
+
+                // Tasks are cooperative and event-driven. Sleep after each
+                // dispatch instead of burning CPU by rerunning them many times
+                // during the same timer tick.
+                cpu_irq::enable_and_hlt();
             }
         }
     }
 }
 
 fn idle_task(ctx: &mut TaskContext) {
-    if ctx.tick % 32 == 0 {
-        serial_println!("[sched] idle task on tick {}", ctx.tick);
-    }
     ctx.yield_now();
 }
 
 fn worker_task(ctx: &mut TaskContext) {
-    if ctx.tick % 16 == 0 {
-        serial_println!("[sched] worker-a tick {}", ctx.tick);
-        println!("[sched] worker-a tick {}", ctx.tick);
-    }
     ctx.yield_now();
 }
 
 fn logger_task(ctx: &mut TaskContext) {
-    if SCHEDULER_TICKED.swap(false, Ordering::Acquire) {
-        let total = BOOT_TICK_COUNT.load(Ordering::Relaxed);
-        serial_println!("[sched] timer tick {}", total);
-    }
     if ctx.tick > 128 {
-        serial_println!("[sched] logger task finished");
         ctx.finish();
         return;
     }

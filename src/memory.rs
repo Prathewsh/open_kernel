@@ -1,16 +1,15 @@
 use bootloader_api::{MemoryMap, MemoryRegionType};
 use x86_64::{
+    structures::paging::{FrameAllocator, OffsetPageTable, PageTable, PhysFrame, Size4KiB},
     PhysAddr, VirtAddr,
-    structures::paging::{
-        FrameAllocator, OffsetPageTable, PageTable, PhysFrame, Size4KiB,
-    },
 };
 
 /// Build an OffsetPageTable that maps every physical address at `physical_memory_offset`.
 ///
-/// SAFETY: `physical_memory_offset` must be the correct offset at which the
-/// bootloader mapped all physical memory, and this function must be called
-/// at most once.
+/// # Safety
+///
+/// `physical_memory_offset` must be the correct offset at which the bootloader
+/// mapped all physical memory, and this function must be called at most once.
 pub unsafe fn init(physical_memory_offset: VirtAddr) -> OffsetPageTable<'static> {
     let l4 = active_level_4_table(physical_memory_offset);
     OffsetPageTable::new(l4, physical_memory_offset)
@@ -30,10 +29,15 @@ pub struct BootInfoFrameAllocator {
 }
 
 impl BootInfoFrameAllocator {
-    /// SAFETY: caller guarantees the memory map is valid and that usable
-    /// frames are not already in use by anything else.
+    /// # Safety
+    ///
+    /// The caller must guarantee that the memory map remains valid and that
+    /// every frame marked usable is not already in use.
     pub unsafe fn init(memory_map: &'static MemoryMap) -> Self {
-        BootInfoFrameAllocator { memory_map, next: 0 }
+        BootInfoFrameAllocator {
+            memory_map,
+            next: 0,
+        }
     }
 
     fn usable_frames(&self) -> impl Iterator<Item = PhysFrame> + '_ {

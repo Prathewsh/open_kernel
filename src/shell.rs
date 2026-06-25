@@ -1,5 +1,5 @@
 use crate::{
-    input::INPUT, interrupts, print, println, scheduler, scheduler::TaskContext, serial_print,
+    input, interrupts, print, println, scheduler, scheduler::TaskContext, serial_print,
     serial_println, vga_buffer,
 };
 
@@ -13,10 +13,7 @@ pub fn run_once() {
     interrupts::poll_keyboard();
     poll_serial_input();
 
-    let line = {
-        let mut input = INPUT.lock();
-        input.pop_line()
-    };
+    let line = input::pop_line();
 
     if let Some(line) = line {
         handle_command(line.trim());
@@ -39,7 +36,8 @@ fn poll_serial_input() {
 }
 
 fn print_prompt() {
-    print!("myos> ");
+    serial_print!("open_kernel> ");
+    print!("open_kernel> ");
 }
 
 enum InputEvent {
@@ -51,18 +49,18 @@ enum InputEvent {
 fn handle_input_event(event: InputEvent) {
     match event {
         InputEvent::Char(ch) => {
-            INPUT.lock().push_char(ch);
+            input::push_char(ch);
             serial_print!("{}", ch);
             print!("{}", ch);
         }
         InputEvent::Backspace => {
-            if INPUT.lock().backspace() {
+            if input::backspace() {
                 serial_print!("\x08 \x08");
                 print!("\x08");
             }
         }
         InputEvent::Enter => {
-            INPUT.lock().commit_line();
+            input::commit_line();
             serial_println!();
             println!();
         }
@@ -87,27 +85,45 @@ fn handle_command(cmd: &str) {
     match cmd {
         "" => {}
         "help" => {
+            serial_println!("commands: help, uname, uptime, ps, tasks, clear, reboot");
             println!("commands: help, uname, uptime, ps, tasks, clear, reboot");
         }
         "uname" => {
+            serial_println!("open_kernel 0.1.0 x86_64 bare-metal");
             println!("open_kernel 0.1.0 x86_64 bare-metal");
         }
         "uptime" => {
-            println!("uptime: {} ticks", scheduler::uptime_ticks());
+            let ticks = scheduler::uptime_ticks();
+            serial_println!("uptime: {} ticks", ticks);
+            println!("uptime: {} ticks", ticks);
         }
         "ps" | "tasks" => {
+            serial_println!("pid state     runs name");
             println!("pid state     runs name");
             scheduler::snapshot_tasks(|task| {
-                println!("{:>3} {:<8?} {:>4} {}", task.id, task.state, task.runs, task.name);
+                serial_println!(
+                    "{:>3} {:<8?} {:>4} {}",
+                    task.id,
+                    task.state,
+                    task.runs,
+                    task.name
+                );
+                println!(
+                    "{:>3} {:<8?} {:>4} {}",
+                    task.id, task.state, task.runs, task.name
+                );
             });
         }
         "clear" => {
             vga_buffer::clear_screen();
+            serial_print!("\x1b[2J\x1b[H");
         }
         "reboot" => {
+            serial_println!("reboot is not wired yet");
             println!("reboot is not wired yet");
         }
         other => {
+            serial_println!("unknown command: {}", other);
             println!("unknown command: {}", other);
         }
     }

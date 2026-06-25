@@ -2,7 +2,7 @@ use lazy_static::lazy_static;
 use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame, PageFaultErrorCode};
 
 use crate::gdt;
-use crate::input::INPUT;
+use crate::input;
 use crate::pic::{InterruptIndex, PICS};
 use crate::scheduler;
 use crate::{print, println, serial_print, serial_println};
@@ -76,7 +76,10 @@ extern "x86-interrupt" fn general_protection_fault_handler(
 extern "x86-interrupt" fn timer_handler(_stack_frame: InterruptStackFrame) {
     // Every tick: acknowledge the interrupt so the PIC sends the next one.
     scheduler::on_timer_tick();
-    unsafe { PICS.lock().notify_end_of_interrupt(InterruptIndex::Timer.as_u8()) }
+    unsafe {
+        PICS.lock()
+            .notify_end_of_interrupt(InterruptIndex::Timer.as_u8())
+    }
 }
 
 extern "x86-interrupt" fn keyboard_handler(_stack_frame: InterruptStackFrame) {
@@ -90,7 +93,10 @@ extern "x86-interrupt" fn keyboard_handler(_stack_frame: InterruptStackFrame) {
         handle_key_event(event);
     }
 
-    unsafe { PICS.lock().notify_end_of_interrupt(InterruptIndex::Keyboard.as_u8()) }
+    unsafe {
+        PICS.lock()
+            .notify_end_of_interrupt(InterruptIndex::Keyboard.as_u8())
+    }
 }
 
 extern "x86-interrupt" fn serial_handler(_stack_frame: InterruptStackFrame) {
@@ -103,7 +109,10 @@ extern "x86-interrupt" fn serial_handler(_stack_frame: InterruptStackFrame) {
         }
     }
 
-    unsafe { PICS.lock().notify_end_of_interrupt(InterruptIndex::Serial1.as_u8()) }
+    unsafe {
+        PICS.lock()
+            .notify_end_of_interrupt(InterruptIndex::Serial1.as_u8())
+    }
 }
 
 enum KeyEvent {
@@ -115,18 +124,18 @@ enum KeyEvent {
 fn handle_key_event(event: KeyEvent) {
     match event {
         KeyEvent::Char(ch) => {
-            INPUT.lock().push_char(ch);
+            input::push_char(ch);
             serial_print!("{}", ch);
             print!("{}", ch);
         }
         KeyEvent::Backspace => {
-            if INPUT.lock().backspace() {
+            if input::backspace() {
                 serial_print!("\x08 \x08");
                 print!("\x08");
             }
         }
         KeyEvent::Enter => {
-            INPUT.lock().commit_line();
+            input::commit_line();
             serial_println!();
             println!();
         }
@@ -171,19 +180,37 @@ fn scancode_to_event(scancode: u8) -> Option<KeyEvent> {
     }
     let event = match scancode {
         0x02..=0x0A => KeyEvent::Char((b'1' + (scancode - 0x02)) as char), // 1–9
-        0x0B        => KeyEvent::Char('0'),
-        0x10        => KeyEvent::Char('q'), 0x11 => KeyEvent::Char('w'), 0x12 => KeyEvent::Char('e'), 0x13 => KeyEvent::Char('r'),
-        0x14        => KeyEvent::Char('t'), 0x15 => KeyEvent::Char('y'), 0x16 => KeyEvent::Char('u'), 0x17 => KeyEvent::Char('i'),
-        0x18        => KeyEvent::Char('o'), 0x19 => KeyEvent::Char('p'),
-        0x1E        => KeyEvent::Char('a'), 0x1F => KeyEvent::Char('s'), 0x20 => KeyEvent::Char('d'), 0x21 => KeyEvent::Char('f'),
-        0x22        => KeyEvent::Char('g'), 0x23 => KeyEvent::Char('h'), 0x24 => KeyEvent::Char('j'), 0x25 => KeyEvent::Char('k'),
-        0x26        => KeyEvent::Char('l'),
-        0x2C        => KeyEvent::Char('z'), 0x2D => KeyEvent::Char('x'), 0x2E => KeyEvent::Char('c'), 0x2F => KeyEvent::Char('v'),
-        0x30        => KeyEvent::Char('b'), 0x31 => KeyEvent::Char('n'), 0x32 => KeyEvent::Char('m'),
-        0x39        => KeyEvent::Char(' '),
-        0x1C        => KeyEvent::Enter,
-        0x0E        => KeyEvent::Backspace,
-        _            => return None,
+        0x0B => KeyEvent::Char('0'),
+        0x10 => KeyEvent::Char('q'),
+        0x11 => KeyEvent::Char('w'),
+        0x12 => KeyEvent::Char('e'),
+        0x13 => KeyEvent::Char('r'),
+        0x14 => KeyEvent::Char('t'),
+        0x15 => KeyEvent::Char('y'),
+        0x16 => KeyEvent::Char('u'),
+        0x17 => KeyEvent::Char('i'),
+        0x18 => KeyEvent::Char('o'),
+        0x19 => KeyEvent::Char('p'),
+        0x1E => KeyEvent::Char('a'),
+        0x1F => KeyEvent::Char('s'),
+        0x20 => KeyEvent::Char('d'),
+        0x21 => KeyEvent::Char('f'),
+        0x22 => KeyEvent::Char('g'),
+        0x23 => KeyEvent::Char('h'),
+        0x24 => KeyEvent::Char('j'),
+        0x25 => KeyEvent::Char('k'),
+        0x26 => KeyEvent::Char('l'),
+        0x2C => KeyEvent::Char('z'),
+        0x2D => KeyEvent::Char('x'),
+        0x2E => KeyEvent::Char('c'),
+        0x2F => KeyEvent::Char('v'),
+        0x30 => KeyEvent::Char('b'),
+        0x31 => KeyEvent::Char('n'),
+        0x32 => KeyEvent::Char('m'),
+        0x39 => KeyEvent::Char(' '),
+        0x1C => KeyEvent::Enter,
+        0x0E => KeyEvent::Backspace,
+        _ => return None,
     };
     Some(event)
 }
