@@ -1,12 +1,7 @@
-/// Standard 8x16 VGA font (CP437) — printable ASCII subset.
-/// 256 glyphs x 16 bytes each = 4096 bytes total.
-/// Unspecified glyphs are all-zero (blank).
 #[rustfmt::skip]
 pub static VGA_FONT_8X16: [u8; 4096] = {
     let mut f = [0u8; 4096];
 
-    // Helper: writes 16 bytes at offset ch*16
-    // Using const fn since we need compile-time evaluation
     macro_rules! g {
         ($c:expr, $b0:expr,$b1:expr,$b2:expr,$b3:expr,$b4:expr,$b5:expr,$b6:expr,$b7:expr,
          $b8:expr,$b9:expr,$ba:expr,$bb:expr,$bc:expr,$bd:expr,$be:expr,$bf:expr) => {{

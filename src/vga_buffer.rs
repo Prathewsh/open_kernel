@@ -41,7 +41,7 @@ impl Writer {
             framebuffer: None,
             column: 0,
             row: 0,
-            foreground: Color::LightGreen,
+            foreground: Color::White,
             background: Color::Black,
         }
     }

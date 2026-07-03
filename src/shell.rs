@@ -1,3 +1,4 @@
+use alloc::format;
 use crate::{
     input, interrupts, print, println, scheduler, scheduler::TaskContext, serial_print,
     serial_println, vga_buffer,
@@ -36,8 +37,8 @@ fn poll_serial_input() {
 }
 
 fn print_prompt() {
-    serial_print!("open_kernel> ");
-    print!("open_kernel> ");
+    serial_print!("root> ");
+    print!("root> ");
 }
 
 enum InputEvent {
@@ -85,17 +86,54 @@ fn handle_command(cmd: &str) {
     match cmd {
         "" => {}
         "help" => {
-            serial_println!("commands: help, uname, uptime, ps, tasks, clear, reboot");
-            println!("commands: help, uname, uptime, ps, tasks, clear, reboot");
+            let help_text = "uname     : prints system information
+sysinfo   : shows detailed system info
+uptime    : shows system uptime
+time      : shows current time
+date      : shows current date
+ls        : lists files and directories
+tree      : displays directory tree
+ps/tasks  : list running tasks
+clear     : clears the screen
+reboot    : restarts the system";
+            serial_println!("{}", help_text);
+            println!("{}", help_text);
         }
         "uname" => {
             serial_println!("open_kernel 0.1.0 x86_64 bare-metal");
             println!("open_kernel 0.1.0 x86_64 bare-metal");
         }
+        "sysinfo" => {
+            let ticks = scheduler::uptime_ticks();
+            let sysinfo_text = format!("\
+    .---.      OS: open_kernel 0.1.0
+   /     \\     Arch: x86_64 bare-metal
+  | () () |    Uptime: {} ticks
+   \\  _  /     Memory: 256 KiB Heap
+    `---'      Shell: custom", ticks);
+            serial_println!("{}", sysinfo_text);
+            println!("{}", sysinfo_text);
+        }
         "uptime" => {
             let ticks = scheduler::uptime_ticks();
             serial_println!("uptime: {} ticks", ticks);
             println!("uptime: {} ticks", ticks);
+        }
+        "time" => {
+            let time = crate::rtc::read_rtc();
+            serial_println!("time: {:02}:{:02}:{:02}", time.hour, time.minute, time.second);
+            println!("time: {:02}:{:02}:{:02}", time.hour, time.minute, time.second);
+        }
+        "date" => {
+            let time = crate::rtc::read_rtc();
+            serial_println!("date: {:04}-{:02}-{:02}", time.year, time.month, time.day);
+            println!("date: {:04}-{:02}-{:02}", time.year, time.month, time.day);
+        }
+        "ls" => {
+            crate::vfs::list_directory();
+        }
+        "tree" => {
+            crate::vfs::print_tree();
         }
         "ps" | "tasks" => {
             serial_println!("pid state     runs name");

@@ -6,12 +6,12 @@ Attempting to open the kernel file...
 Found kernel.elf! Reading file size...
 Parsing ELF...
 Loading ELF segments...
-  Kernel range: 0x200000 - 0x246000 (70 pages)
-  Segment: paddr=0x200000, filesz=0x34e96, memsz=0x34e96
-  Segment: paddr=0x234e98, filesz=0x7848, memsz=0x7848
-  Segment: paddr=0x23c6e0, filesz=0x80, memsz=0x80
-  Segment: paddr=0x23c760, filesz=0x3580, memsz=0x9850
-Exiting boot services and jumping to kernel at 0x20d120...
+  Kernel range: 0x200000 - 0x249000 (73 pages)
+  Segment: paddr=0x200000, filesz=0x37006, memsz=0x37006
+  Segment: paddr=0x237008, filesz=0x7bd8, memsz=0x7bd8
+  Segment: paddr=0x23ebe0, filesz=0x88, memsz=0x88
+  Segment: paddr=0x23ec68, filesz=0x3918, memsz=0x9be8
+Exiting boot services and jumping to kernel at 0x20d330...
 open_kernel booting...
 [OK] GDT + TSS
 [OK] IDT
@@ -19,7 +19,7 @@ open_kernel booting...
 EXCEPTION: BREAKPOINT
 InterruptStackFrame {
     instruction_pointer: VirtAddr(
-        0x20b8e1,
+        0x20ba51,
     ),
     code_segment: SegmentSelector {
         index: 1,
@@ -45,12 +45,33 @@ InterruptStackFrame {
 [OK] scheduler: 4 task slots populated
 [OK] scheduler initialized
 [OK] shell ready
-open_kernel> [OK] interrupts enabled — scheduler running
+root> [OK] interrupts enabled — scheduler running
 
-open_kernel> uname               help
-commands: help, uname, uptime, ps, tasks, clear, reboot
-open_kernel> uname
-open_kernel 0.1.0 x86_64 bare-metal
-open_kernel> uptime
-uptime: 315 ticks
-open_kernel> 
+root> help
+uname     : prints system information
+sysinfo   : shows detailed system info
+uptime    : shows system uptime
+time      : shows current time
+date      : shows current date
+ls        : lists files and directories
+tree      : displays directory tree
+ps/tasks  : list running tasks
+clear     : clears the screen
+reboot    : restarts the system
+root> ls
+Directory listing:
+  kernel.elf
+  config/
+  bin/
+  home/
+root> tree
+.
+|-- bin/
+|   |-- shell
+|   `-- init
+|-- config/
+|   `-- system.conf
+|-- home/
+|   `-- user/
+`-- kernel.elf
+root> 

@@ -15,6 +15,8 @@ pub mod scheduler;
 pub mod shell;
 pub mod vga_buffer;
 pub mod vga_font;
+pub mod rtc;
+pub mod vfs;
 
 use alloc::{boxed::Box, string::String, vec::Vec};
 use core::fmt::Write;
