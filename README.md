@@ -4,8 +4,6 @@ A bare-metal Rust kernel for `x86_64` - no standard library, no operating system
 
 This project is currently a kernel, not a full desktop/server operating system. It boots, initializes core hardware and memory services, and runs a small cooperative task scheduler inside the kernel itself.
 
-![QEMU Window](qemu_window.png)
-
 ```text
     ___   _  __   root@open_kernel
    / _ \ | |/ /   ----------------
@@ -15,6 +13,8 @@ This project is currently a kernel, not a full desktop/server operating system. 
                   Heap: 384 / 262144 B (261760 free)
                   Shell: custom (vfs enabled)
 ```
+
+![QEMU Window](qemu_window.png)
 
 ## What it does today
 
