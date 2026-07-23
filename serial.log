@@ -47,6 +47,14 @@ InterruptStackFrame {
 [OK] shell ready
 root:/> [OK] interrupts enabled — scheduler running
 
+root:/> sysinfo
+___   _  __   root@open_kernel
+   / _ \ | |/ /   ----------------
+  | | | || ' /    OS: open_kernel 0.1.0 x86_64
+  | |_| || . \    Kernel: 0.1.0-baremetal
+   \___/ |_|\_\   Uptime: 52 ticks
+                  Heap: 368 / 262144 B (261776 free)
+                  Shell: custom (vfs enabled)
 root:/> help
 uname       : prints system information
 sysinfo     : shows detailed system info
@@ -83,12 +91,43 @@ clear       : clears the screen
 panic       : triggers kernel panic test
 reboot      : restarts the system
 shutdown    : powers off the system
-root:/> sysinfo
-___   _  __   root@open_kernel
-   / _ \ | |/ /   ----------------
-  | | | || ' /    OS: open_kernel 0.1.0 x86_64
-  | |_| || . \    Kernel: 0.1.0-baremetal
-   \___/ |_|\_\   Uptime: 165 ticks
-                  Heap: 384 / 262144 B (261760 free)
-                  Shell: custom (vfs enabled)
+root:/> xlear
+unknown command: xlear
+root:/> clear
+[2J[Hroot:/> help
+uname       : prints system information
+sysinfo     : shows detailed system info
+meminfo     : displays heap memory stats
+cpuid       : displays CPU hardware info
+vmap        : displays per-process virtual memory spaces & page tables
+drivers     : lists storage & graphics drivers in driver model
+ifconfig    : displays network stack interface configuration
+ping <ip>   : sends ICMP echo requests over network stack
+netstat     : displays active network sockets
+modifiers   : displays keyboard modifier states (Shift/Ctrl/Alt)
+uptime      : shows system uptime (HH:MM:SS)
+time        : shows current time
+date        : shows current date
+cd <dir>    : changes current working directory
+pwd         : prints current working directory
+ls [path]   : lists files and directories
+tree        : displays directory tree
+cat <file>  : displays content of a file
+touch <file>: creates empty file
+write f txt : writes text content to file
+mkdir <dir> : creates directory
+rm <path>   : removes file or directory
+echo <msg>  : prints argument text
+color <thm> : sets VGA color theme (default|matrix|amber|cyberpunk)
+prompt <str>: changes shell prompt string
+matrix      : displays green ASCII matrix digital rain
+guess <num> : number guessing game (1-10)
+calc <expr> : evaluates basic arithmetic (e.g. calc 12 + 34)
+ps/tasks    : list running tasks
+spawn [name]: creates new background task
+kill <pid>  : terminates running task by PID
+clear       : clears the screen
+panic       : triggers kernel panic test
+reboot      : restarts the system
+shutdown    : powers off the system
 root:/> 
