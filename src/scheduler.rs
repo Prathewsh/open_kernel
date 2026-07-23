@@ -166,6 +166,28 @@ pub fn snapshot_tasks(mut visit: impl FnMut(TaskInfo)) {
     }
 }
 
+pub fn kill_task(id: usize) -> bool {
+    let mut sched = SCHEDULER.lock();
+    if id < MAX_TASKS && sched.tasks[id].is_some() {
+        if let Some(task) = &mut sched.tasks[id] {
+            task.state = TaskState::Finished;
+            return true;
+        }
+    }
+    false
+}
+
+pub fn spawn_task(name: &'static str) -> Option<usize> {
+    let mut sched = SCHEDULER.lock();
+    for (idx, slot) in sched.tasks.iter_mut().enumerate() {
+        if slot.is_none() || slot.as_ref().map(|t| t.state) == Some(TaskState::Finished) {
+            *slot = Some(Task::new(name, worker_task));
+            return Some(idx);
+        }
+    }
+    None
+}
+
 fn task_count_locked(sched: &Scheduler) -> usize {
     sched.tasks.iter().filter(|task| task.is_some()).count()
 }

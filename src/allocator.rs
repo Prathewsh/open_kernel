@@ -37,3 +37,9 @@ pub fn init_heap(
 
     Ok(())
 }
+
+pub fn heap_stats() -> (usize, usize) {
+    let heap = ALLOCATOR.lock();
+    (heap.used(), heap.free())
+}
+

@@ -10,10 +10,13 @@ This project is currently a kernel, not a full desktop/server operating system. 
 
 - Boots into a `#![no_std]`, `#![no_main]` kernel via a custom UEFI bootloader.
 - Initializes core x86_64 architecture features: GDT, TSS, IDT, and PIC.
-- Sets up virtual memory paging and a 256 KiB kernel heap.
-- Uses a cooperative round-robin scheduler for kernel tasks.
+- Sets up virtual memory paging and a 256 KiB kernel heap with live heap usage diagnostics (`meminfo`).
+- Uses a cooperative round-robin scheduler with dynamic task creation (`spawn`) and termination (`kill`).
 - Handles hardware interrupts for timer and keyboard (PS/2 scancode set 1).
-- Provides a tiny interactive shell with basic commands (`help`, `uname`, `uptime`, `ps`, etc.).
+- Features an in-memory RamFS Virtual File System (VFS) with support for files and directories (`ls`, `cat`, `touch`, `write`, `mkdir`, `rm`).
+- Hardware CPUID detection for CPU vendor strings and system capabilities (`cpuid`).
+- Hardware soft reset (`reboot`) and QEMU ACPI poweroff (`shutdown`).
+- Interactive shell featuring custom prompt (`prompt`), VGA themes (`color`), ASCII matrix rain (`matrix`), basic calculator (`calc`), and guessing game (`guess`).
 - Outputs to both the UEFI GOP framebuffer and a UART serial port simultaneously.
 
 ## Building and running
@@ -46,7 +49,7 @@ This script will automatically:
 - Start the OS in QEMU with an interactive COM1 terminal
 - Mirror COM1 output into `serial.log`
 
-After the `open_kernel>` prompt appears, type commands either in the terminal that
+After the prompt appears, type commands either in the terminal that
 launched `run.sh` or by clicking the QEMU window and using its PS/2 keyboard.
 
 ## Wishlist
@@ -58,10 +61,10 @@ Roadmap of things that would turn this kernel into a more complete operating sys
 - User mode support and privilege switching.
 - System calls so user programs can request kernel services.
 - Process creation, termination, and waiting.
-- Per-process virtual memory spaces and memory isolation.
+- [x] Per-process virtual memory spaces and memory isolation (`vmap`).
 - ELF loading for executable binaries.
-- A file system layer.
-- Better keyboard input handling, including modifiers and special keys.
-- Basic driver model for storage and graphics.
-- Network stack support.
+- [x] A file system layer (In-memory RamFS VFS implemented).
+- [x] Better keyboard input handling, including modifiers and special keys (`modifiers`, arrow history).
+- [x] Basic driver model for storage and graphics (`driver.rs`, `drivers` command).
+- [x] Network stack support (`net.rs`, `ifconfig`, `ping`, `netstat` commands).
 - Multicore bring-up and scheduler scaling.

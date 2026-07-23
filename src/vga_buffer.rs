@@ -14,6 +14,10 @@ pub enum Color {
     Green,
     LightGreen,
     White,
+    Amber,
+    Cyan,
+    Magenta,
+    Red,
 }
 
 impl Color {
@@ -23,6 +27,10 @@ impl Color {
             Self::Green => (0, 170, 0),
             Self::LightGreen => (85, 255, 85),
             Self::White => (255, 255, 255),
+            Self::Amber => (255, 170, 0),
+            Self::Cyan => (0, 255, 255),
+            Self::Magenta => (255, 0, 255),
+            Self::Red => (255, 85, 85),
         }
     }
 }
@@ -198,6 +206,14 @@ pub fn init(framebuffer: FrameBufferInfo) {
 pub fn clear_screen() {
     x86_64::instructions::interrupts::without_interrupts(|| {
         WRITER.lock().clear_screen();
+    });
+}
+
+pub fn set_colors(foreground: Color, background: Color) {
+    x86_64::instructions::interrupts::without_interrupts(|| {
+        let mut writer = WRITER.lock();
+        writer.foreground = foreground;
+        writer.background = background;
     });
 }
 

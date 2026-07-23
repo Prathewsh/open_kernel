@@ -17,6 +17,9 @@ pub mod vga_buffer;
 pub mod vga_font;
 pub mod rtc;
 pub mod vfs;
+pub mod driver;
+pub mod net;
+pub mod process_memory;
 
 use alloc::{boxed::Box, string::String, vec::Vec};
 use core::fmt::Write;
