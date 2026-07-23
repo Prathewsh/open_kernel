@@ -6,6 +6,16 @@ This project is currently a kernel, not a full desktop/server operating system. 
 
 ![QEMU Window](qemu_window.png)
 
+```text
+    ___   _  __   root@open_kernel
+   / _ \ | |/ /   ----------------
+  | | | || ' /    OS: open_kernel 0.1.0 x86_64
+  | |_| || . \    Kernel: 0.1.0-baremetal
+   \___/ |_|\_\   Uptime: 165 ticks
+                  Heap: 384 / 262144 B (261760 free)
+                  Shell: custom (vfs enabled)
+```
+
 ## What it does today
 
 - Boots into a `#![no_std]`, `#![no_main]` kernel via a custom UEFI bootloader.
